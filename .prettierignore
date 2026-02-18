@@ -1,0 +1,9 @@
+dist/
+coverage/
+build/
+
+node_modules/
+yarn.lock
+
+.DS_Store
+Thumbs.db
