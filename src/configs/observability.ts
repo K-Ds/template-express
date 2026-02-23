@@ -40,3 +40,17 @@ export const httpRequestDuration = new promClient.Histogram({
   buckets: [0.1, 0.5, 1, 2, 5],
   registers: [promRegister],
 });
+
+export const cacheHitsTotal = new promClient.Counter({
+  name: 'redis_cache_hits_total',
+  help: 'Total number of Redis cache hits',
+  labelNames: ['route'],
+  registers: [promRegister],
+});
+
+export const cacheMissesTotal = new promClient.Counter({
+  name: 'redis_cache_misses_total',
+  help: 'Total number of Redis cache misses',
+  labelNames: ['route'],
+  registers: [promRegister],
+});

@@ -1,12 +1,15 @@
 import dotenv from 'dotenv';
 import { app } from './app';
 import { logger } from './utils/logger';
+import { redisClient, connectRedis } from '@/configs/redis';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
+  await connectRedis();
+
   const server = app.listen(PORT, () => {
     logger.info(`Server running on port ${PORT}`);
     logger.info(`Environment: ${process.env.NODE_ENV}`);
@@ -17,7 +20,14 @@ const startServer = async () => {
 
     server.close(async () => {
       logger.info('HTTP server closed');
-      process.exit(0);
+      try {
+        await redisClient.quit();
+        logger.info('Redis connection closed gracefully');
+        process.exit(0);
+      } catch (err) {
+        logger.error({ err }, 'Error during graceful shutdown');
+        process.exit(1);
+      }
     });
 
     setTimeout(() => {
