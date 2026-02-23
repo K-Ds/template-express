@@ -23,9 +23,12 @@ const startServer = async () => {
     server.close(async () => {
       logger.info('HTTP server closed');
       try {
-        await redisClient.quit();
-        await closeDB();
-        logger.info('Redis connection closed gracefully');
+        if (redisClient.isOpen) {
+          await redisClient.quit();
+          await closeDB();
+          logger.info('Redis connection closed gracefully');
+        }
+        logger.info('All connections closed gracefully');
         process.exit(0);
       } catch (err) {
         logger.error({ err }, 'Error during graceful shutdown');
