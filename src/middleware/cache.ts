@@ -4,12 +4,7 @@ import AppError from '../utils/AppError';
 import { logger } from '../utils/logger';
 import { cacheHitsTotal, cacheMissesTotal } from '@/configs/observability';
 import ApiResponse from '@/utils/ApiResponse';
-
-interface CacheOptions {
-  durationInSeconds: number;
-  keyBuilder?: (req: Request) => string;
-  tags?: (req: Request) => string[];
-}
+import type { CacheOptions, errorBody, payloadCache, successBody } from '@/types/cache';
 
 export const cacheRoute = ({ durationInSeconds, keyBuilder, tags }: CacheOptions) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -35,19 +30,22 @@ export const cacheRoute = ({ durationInSeconds, keyBuilder, tags }: CacheOptions
 
       const originalJson = res.json.bind(res);
 
-      res.json = (body: any): Response => {
+      res.json = (body: successBody | errorBody): Response => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          const payloadToCache = {
+          const payloadToCache: payloadCache = {
             message: body.message,
-            data: body.data,
           };
+
+          if ('data' in body) {
+            payloadToCache.data = body.data;
+          }
 
           const multi = redisClient.multi();
           multi.setEx(key, durationInSeconds, JSON.stringify(payloadToCache));
 
           if (tags) {
             const resolvedTags = tags(req);
-            resolvedTags.forEach((tag) => {
+            resolvedTags.forEach((tag: string) => {
               const tagKey = `tag:${tag}`;
               multi.sAdd(tagKey, key);
               multi.expire(tagKey, durationInSeconds);

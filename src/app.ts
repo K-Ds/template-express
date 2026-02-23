@@ -7,6 +7,7 @@ import { metricsEndpoint, metricsMiddleware } from './middleware/observability';
 import { requestLogger } from './configs/observability';
 import { redisClient } from './configs/redis';
 import { logger } from './utils/logger';
+import { pool } from './configs/database';
 
 const app = express();
 
@@ -35,12 +36,30 @@ app.get('/health', async (_req, res) => {
     logger.error({ err }, 'Redis ping failed during health check');
   }
 
-  const isSystemUp = redisStatus === 'up';
+  let dbStatus = 'down';
+  const poolStats = {
+    total: pool?.totalCount,
+    idle: pool?.idleCount,
+    waiting: pool?.waitingCount,
+  };
+
+  try {
+    await pool.query('SELECT 1');
+    dbStatus = 'up';
+  } catch (err) {
+    logger.error({ err }, 'Database readiness check failed');
+  }
+
+  const isSystemUp = redisStatus === 'up' && dbStatus === 'up';
 
   const healthData = {
     services: {
       redis: {
         status: redisStatus,
+      },
+      database: {
+        status: dbStatus,
+        pool: poolStats,
       },
     },
     uptime: `${Math.floor(process.uptime())}s`,

@@ -6,8 +6,8 @@ const redisUrl =
   process.env.REDIS_URL ||
   `redis://${process.env.REDIS_HOST || '127.0.0.1'}:${process.env.REDIS_PORT || '6379'}`;
 
-let redisConnectionOptions: RedisClientOptions = {
-   url: redisUrl,
+const redisConnectionOptions: RedisClientOptions = {
+  url: redisUrl,
   socket: {
     reconnectStrategy: (retries) => {
       if (retries > 20) {
