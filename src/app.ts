@@ -3,7 +3,8 @@ import cors from 'cors';
 import type { Response } from 'express';
 import ApiResponse from './utils/ApiResponse';
 import { globalErrorHandler } from './middleware/ErrorHandler';
-import { metricsEndpoint, metricsMiddleware, requestLogger } from './middleware/observability';
+import { metricsEndpoint, metricsMiddleware } from './middleware/observability';
+import { requestLogger } from './configs/observability';
 
 const app = express();
 
