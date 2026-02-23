@@ -2,12 +2,14 @@ import dotenv from 'dotenv';
 import { app } from './app';
 import { logger } from './utils/logger';
 import { redisClient, connectRedis } from '@/configs/redis';
+import { closeDB, connectDB } from './configs/database';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
+  await connectDB();
   await connectRedis();
 
   const server = app.listen(PORT, () => {
@@ -22,6 +24,7 @@ const startServer = async () => {
       logger.info('HTTP server closed');
       try {
         await redisClient.quit();
+        await closeDB();
         logger.info('Redis connection closed gracefully');
         process.exit(0);
       } catch (err) {
